@@ -12,9 +12,6 @@ const {
   countAdmins,
   getAdmin,
 } = require("./controller");
-const {
-  authorizeSuperAdmin,
-} = require("../../middleware/authorize");
 
 const router = new express.Router();
 
@@ -35,8 +32,6 @@ router.post("/login", function (req, res) {
   })(req, res);
 });
 
-router.use(passport.authenticate("jwt", { session: false }));
-
 router.patch("/changePassword", async function (req, res) {
   try {
     await changePassword({
@@ -51,20 +46,17 @@ router.patch("/changePassword", async function (req, res) {
   }
 });
 
-router.get('/admins/:username', async function(req, res){
-  try{
+router.get("/admins/:username", async function (req, res) {
+  try {
     const admin = await getAdmin(req.params.username);
     delete admin.Password;
     return res.status(200).json(admin);
-  }
-  catch(err){
+  } catch (err) {
     return res.status(400).json(err);
   }
-})
+});
 
-router.use(authorizeSuperAdmin);
-
-router.post("/createAdmin", authorizeSuperAdmin, async function (req, res) {
+router.post("/createAdmin", async function (req, res) {
   try {
     const admin = await createAdmin({
       username: req.body.username,
@@ -78,7 +70,6 @@ router.post("/createAdmin", authorizeSuperAdmin, async function (req, res) {
 });
 
 router.delete("/banAdmin", async function (req, res) {
-
   try {
     await banAdmin({ username: req.body.username });
     return res.status(200).json({ message: "succeed" });
@@ -102,7 +93,10 @@ router.patch("/resetPassword", async function (req, res) {
       username: req.body.username,
       superAdminPassword: req.body.superAdminPassword,
     });
-    return res.status(200).json({ newPassword: newPassword, message: 'Please change new password' });
+    return res.status(200).json({
+      newPassword: newPassword,
+      message: "Please change new password",
+    });
   } catch (err) {
     return res.status(400).json(err);
   }
